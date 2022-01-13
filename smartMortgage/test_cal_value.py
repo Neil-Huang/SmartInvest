@@ -1,8 +1,10 @@
 import numpy as np
+from matplotlib import pyplot as plt
+import matplotlib
 
 #numpy计算复利
-periodic_payment = -np.pmt(rate=0.056/12, nper=300, pv=35 *10000)
-print("每月的按揭还款额: " + str(round(periodic_payment, 2)))
+# periodic_payment = -np.pmt(rate=0.056/12, nper=300, pv=35 *10000)
+# print("每月的按揭还款额: " + str(round(periodic_payment, 2)))
 
 # 参考: [[Python]等额本息房贷计算器 - Fia - 博客园](https://www.cnblogs.com/FiaFia/p/8580414.html)
 #       [等额本息法_百度百科](https://baike.baidu.com/item/%E7%AD%89%E9%A2%9D%E6%9C%AC%E6%81%AF%E6%B3%95/11049926)
@@ -71,14 +73,15 @@ def monthlyPayment2(principal, year_rate, year_duration):
         #print('%dth monthly payment is : %.2f (Interest: %.2f and Principal: %.2f)' % (
         #i, monthly_payment, monthly_interest_payable, monthly_principal_payable))
 
-    print(round(total_interest_payable,2))
+    # print(round(total_interest_payable,2))
     return round(total_interest_payable,2)
 
 
-house_price = 127    #房子总价
-current_wealth = 80  #当前可用资金
-loan_rate = 0.052    #贷款利率
-loan_years = 25      #贷款年限
+# 定义变量
+house_price = 127  # 房子总价
+current_wealth = 80  # 当前可用资金
+loan_rate = 0.052  # 贷款利率
+loan_years = 25  # 贷款年限
 
 
 house_yearly_i_rate = 0.01  #房子每年增值率
@@ -88,7 +91,7 @@ family_month_expense = 0.5  #家庭每月支出
 
 def cal_value(down_payment_rate=0.3, financial_yearly_return_rate=0.03, loan_type=1):
     """
-    计算价值
+    计算付款方式的价值
 
     Parameters
     ----------
@@ -108,15 +111,20 @@ def cal_value(down_payment_rate=0.3, financial_yearly_return_rate=0.03, loan_typ
 
     years = loan_years
     down_payment = house_price * down_payment_rate  # 首付
+    # 首付比例可能超过现有资金(优化)
+    if down_payment > current_wealth:
+        down_payment_rate = round(current_wealth / house_price, 2)
+        down_payment = current_wealth
 
     # 先算出总利息
     total_loan_interest = 0
-    if loan_type==1:
+    if loan_type == 1:
         total_loan_interest = monthlyPayment(house_price - down_payment, loan_rate, loan_years)
     else:
+        # todo:优化等本每月的计算
         total_loan_interest = monthlyPayment2(house_price - down_payment, loan_rate, loan_years)
 
-    monthly_interest = total_loan_interest/(loan_years*12)
+    monthly_interest = total_loan_interest / (loan_years * 12)
 
     #房子增值
     house_wealth = house_price
@@ -131,9 +139,11 @@ def cal_value(down_payment_rate=0.3, financial_yearly_return_rate=0.03, loan_typ
         if this_month <= loan_years * 12:
             cash_wealth = cash_wealth - monthly_interest
 
-    hv,cv = round(house_wealth, 2), round(cash_wealth, 2)
-    print("参数:首付",down_payment_rate,"年收益率",financial_yearly_return_rate,"  总价:", round((hv + cv),2), "房子资产:", hv, "现金资产:", cv)
-    return hv,cv
+    hv, cv = round(house_wealth, 2), round(cash_wealth, 2)
+    print("参数:首付", down_payment_rate, "年收益率", financial_yearly_return_rate,
+          "贷款方式", '等息' if loan_type == 1 else '等本',
+          "  总价:", round((hv + cv), 2), "房子资产:", hv, "现金资产:", cv)
+    return hv, cv
 
 
 if __name__ == '__main__':
@@ -146,18 +156,43 @@ if __name__ == '__main__':
     #monthlyPayment(principal, year_rate, year_duration)
     #monthlyPayment2(principal, year_rate, year_duration)
 
-    hv1, cv1 = cal_value(0.3, 0.01)
-
+    hv0, cv0 = cal_value(0.3, 0.01)
     hv1, cv1 = cal_value(0.3, 0.03)
     hv2, cv2 = cal_value(0.3, 0.06)
     hv3, cv3 = cal_value(0.3, 0.09)
-    cal_value(0.6, 0.01)
 
-    cal_value(0.6, 0.03)
-    cal_value(0.6, 0.06)
-    cal_value(0.6, 0.09)
+    hv20, cv20 = cal_value(0.6, 0.01)
+    hv21, cv21 = cal_value(0.6, 0.03)
+    hv22, cv22 = cal_value(0.6, 0.06)
+    hv23, cv23 = cal_value(0.6, 0.09)
 
-    cal_value(0.3, 0.01, 2)
-    cal_value(0.6, 0.01, 2)
+    hv30, cv30 = cal_value(0.3, 0.01, 2)
+    hv31, cv31 = cal_value(0.3, 0.03, 2)
+    hv32, cv32 = cal_value(0.3, 0.06, 2)
+    hv33, cv33 = cal_value(0.3, 0.09, 2)
 
+    hv40, cv40 = cal_value(0.6, 0.01, 2)
+    hv41, cv41 = cal_value(0.6, 0.03, 2)
+    hv42, cv42 = cal_value(0.6, 0.06, 2)
+    hv43, cv43 = cal_value(0.6, 0.09, 2)
 
+    # 显示图
+    fig = plt.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.88, 0.88])
+    x = ['31', '33', '36', '39']
+    y = [cv0, cv1, cv2, cv3]
+    ax.bar(x, y, align='center')
+
+    x2 = ['61', '63', '66', '69']
+    y2 = [cv20, cv21, cv22, cv23]
+    ax.bar(x2, y2, color='g', align='center')
+
+    x3 = ['312', '332', '362', '392']
+    y3 = [cv30, cv31, cv32, cv33]
+    ax.bar(x3, y3, align='center')
+
+    x4 = ['612', '632', '662', '692']
+    y4 = [cv40, cv41, cv42, cv43]
+    ax.bar(x4, y4, color='y', align='center')
+
+    plt.show()
