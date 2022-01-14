@@ -195,4 +195,11 @@ if __name__ == '__main__':
     y4 = [cv40, cv41, cv42, cv43]
     ax.bar(x4, y4, color='y', align='center')
 
+    #另一种图
+    fig2 = plt.figure()
+    ax2 = fig2.add_axes([0.1, 0.1, 0.88, 0.88])
+    ax2.plot(x,y,"ob")
+    ax2.plot(x2, y2)
+    ax2.plot(x3, y3)
+
     plt.show()
